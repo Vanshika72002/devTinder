@@ -1,7 +1,8 @@
 const express=require('express');
 const app=express();
 const validation=require("../utils/validation");
-
+const bcrypt=require("bcrypt");
+const validator=require("validator")
 
 //connecting to database.
 const connectDb=require("../config/database").connnectDB;
@@ -22,15 +23,16 @@ const User=require("../src/models/User");
 app.use(express.json());
 
 app.post("/signup",async(req,res)=>{
+    const {email,password,firstName,lastName,skills,about,age,gender}=req.body;
     const data=req.body;
     
     try{
         //validate user
         validation.validateSignupData(req);
         //encrypt the password
-        
+        const hash=await bcrypt.hash(password,10);
         //create instance of model 
-        const newUser=new User.userModel(data);
+        const newUser=new User.userModel({email,firstName,age,gender,lastName,skills,password:hash});
 
         //save the user to database
         await newUser.save();
@@ -79,7 +81,31 @@ app.patch("/user",async(req,res)=>{
 })
 
 
+//login a user
+app.get("/login",async(req,res)=>{
 
+    const {email,password}=req.body;
+    if(!validator.isEmail(email))
+        res.status(400).send("please enter a valid email");
+    else{
+        User.userModel.findOne({email}).then((doc)=>{
+            if(doc){
+                console.log(doc);
+                bcrypt.compare(password,doc.password,(err,isMatch)=>{
+                    if(isMatch){
+                        res.send("user logged in successfully");
+                    }else{
+                        res.status(400).send("please enter valid credentials");
+                    }
+                        
+                })
+            }else{
+                res.status(400).send("user not found");
+            }
+            
+        }).catch(err=>res.status(400).send("login failed"));
+    }
+})
 
 
 
