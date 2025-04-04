@@ -1,9 +1,13 @@
 const express=require('express');
 const app=express();
-const validation=require("../utils/validation");
 const bcrypt=require("bcrypt");
 const validator=require("validator")
-
+const jwt=require("jsonwebtoken")
+const cookie_parser=require("cookie-parser");
+const authRouter=require("../src/routes/auth");
+const profileRouter=require("../src/routes/profile");
+const requestRouter=require("./routes/request");
+const userRouter=require("./routes/user");
 //connecting to database.
 const connectDb=require("../config/database").connnectDB;
 connectDb().then(()=>{
@@ -18,36 +22,13 @@ connectDb().then(()=>{
 
 const User=require("../src/models/User");
 
-// signup a user
-
 app.use(express.json());
+app.use(cookie_parser());
 
-app.post("/signup",async(req,res)=>{
-    const {email,password,firstName,lastName,skills,about,age,gender}=req.body;
-    const data=req.body;
-    
-    try{
-        //validate user
-        validation.validateSignupData(req);
-        //encrypt the password
-        const hash=await bcrypt.hash(password,10);
-        //create instance of model 
-        const newUser=new User.userModel({email,firstName,age,gender,lastName,skills,password:hash});
-
-        //save the user to database
-        await newUser.save();
-
-        //response to client
-        res.send("user registered successfully ");
-    }catch(err){
-        //error ,if any
-        res.status(400).send("could not register the user : " + err.message);
-    }
-})
-
-
-//get a user
-
+app.use("/",authRouter);
+app.use("/",profileRouter);
+app.use("/",requestRouter);
+app.use("/",userRouter);
 
 
 
@@ -66,6 +47,14 @@ app.delete("/deleteById",async (req,res)=>{
 //update a user
 app.patch("/user",async(req,res)=>{
 
+    const token=req.cookies.token;
+    const object=jwt.verify(token,"SeCrETKee");
+    console.log(object);
+        const user=await User.userModel.findOne({"_id":object._id}).then((doc)=>
+            console.log(doc)
+        ).catch(err=>console.log(err))
+        
+    
     const id=req.body.id;
     const data=req.body;
     const updateAllowedOn=["id","password","lastName","skills","about","photoUrl","age"];
@@ -82,30 +71,6 @@ app.patch("/user",async(req,res)=>{
 
 
 //login a user
-app.get("/login",async(req,res)=>{
-
-    const {email,password}=req.body;
-    if(!validator.isEmail(email))
-        res.status(400).send("please enter a valid email");
-    else{
-        User.userModel.findOne({email}).then((doc)=>{
-            if(doc){
-                console.log(doc);
-                bcrypt.compare(password,doc.password,(err,isMatch)=>{
-                    if(isMatch){
-                        res.send("user logged in successfully");
-                    }else{
-                        res.status(400).send("please enter valid credentials");
-                    }
-                        
-                })
-            }else{
-                res.status(400).send("user not found");
-            }
-            
-        }).catch(err=>res.status(400).send("login failed"));
-    }
-})
 
 
 
