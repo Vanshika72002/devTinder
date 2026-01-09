@@ -8,6 +8,7 @@ const authRouter=require("../src/routes/auth");
 const profileRouter=require("../src/routes/profile");
 const requestRouter=require("./routes/request");
 const userRouter=require("./routes/user");
+const cors=require("cors")
 //connecting to database.
 const connectDb=require("../config/database").connnectDB;
 connectDb().then(()=>{
@@ -24,7 +25,12 @@ const User=require("../src/models/User");
 
 app.use(express.json());
 app.use(cookie_parser());
-
+app.use(cors(
+    {
+        origin:"http://localhost:5173",
+        credentials:true
+    }
+));
 app.use("/",authRouter);
 app.use("/",profileRouter);
 app.use("/",requestRouter);
@@ -35,10 +41,10 @@ app.use("/",userRouter);
 //delete a user
 app.delete("/deleteById",async (req,res)=>{
     const id=req.body._id;
-    console.log(id);
+    // console.log(id);
     try{
         await User.userModel.findByIdAndDelete(id);
-        res.send("Document deleted successfully");
+        res.status(200).send("Document deleted successfully");
     }catch{
         res.status(404).send("there was an error while deleting the document with id = "+id);
     }
@@ -49,7 +55,7 @@ app.patch("/user",async(req,res)=>{
 
     const token=req.cookies.token;
     const object=jwt.verify(token,"SeCrETKee");
-    console.log(object);
+    // console.log(object);
         const user=await User.userModel.findOne({"_id":object._id}).then((doc)=>
             console.log(doc)
         ).catch(err=>console.log(err))
@@ -63,7 +69,7 @@ app.patch("/user",async(req,res)=>{
             throw new Error("you are not allowed to update your firstName , gender , email");
         }
         await User.userModel.findByIdAndUpdate({_id:id},data);
-        res.send("user updated successfully");
+        res.status(200).send("user updated successfully");
     }catch(err){
         res.status(400).send(err.message);  
     }

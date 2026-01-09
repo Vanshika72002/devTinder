@@ -9,11 +9,20 @@ const userSchema=new mongoose.Schema({
         type:"string",
         maxLength:50,
         required:true,
-        minLength:2
+        minLength:2,
+        validate(value){
+            return validator.isAlpha(value);
+        
+        }
     },
     "lastName":{
         type:"string",
-        maxLen:50
+        maxLen:50,
+        minLength:2,
+        validate(value){
+            return validator.isAlpha(value);
+        
+        }
     },
     "age":{
         type:"Number",
@@ -28,7 +37,7 @@ const userSchema=new mongoose.Schema({
         type:String,
         required:true,
         validate(value){
-            console.log("Schema validator");
+            // console.log("Schema validator");
             return validator.isEmail(value);
         },
         unique:true,
@@ -41,6 +50,7 @@ const userSchema=new mongoose.Schema({
         required:true,
         validate(value){
             return validator.isStrongPassword(value);
+        
         }
     },
     photoUrl:{

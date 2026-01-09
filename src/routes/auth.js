@@ -16,7 +16,7 @@ router.post("/signup",async(req,res)=>{
         //check if user with the email id already exists
         
         const user=await User.userModel.findOne({email});
-        console.log(user);
+        // console.log(user);
 
         if(user){
             throw new Error("user with the email id already exists");
@@ -30,15 +30,15 @@ router.post("/signup",async(req,res)=>{
         await newUser.save();
 
         //response to client
-        res.send("user registered successfully ");
+        res.status(200).send("user registered successfully ");
     }catch(err){
         //error ,if any
         res.status(400).send("could not register the user : " + err.message);
     }
 })
 
-router.get("/login",async(req,res)=>{
-    console.log("inside path /login ")
+router.post("/login",async(req,res)=>{
+    // console.log("inside path /login ")
     const {email,password}=req.body;
     if(!validator.isEmail(email))
         res.status(400).send("please enter a valid email");
@@ -47,21 +47,19 @@ router.get("/login",async(req,res)=>{
             if(doc){
                 bcrypt.compare(password,doc.password,(err,isMatch)=>{
                     if(isMatch){
-                        console.log(doc._id);
                         const token=jwt.sign(
                             {
                                 _id:doc._id
                             },"SeCrETKee"
                         )
-                        console.log("token=",token);
                         res.cookie("token",token);
-                        res.send("user logged in successfully");
+                        res.status(200).send(doc);
                     }else{
                         res.status(400).send("please enter valid credentials");
                     }      
                 })
             }else{
-                res.status(400).send("user not found");
+                res.status(400).send("user not found!!");
             }
         }).catch(err=>res.status(400).send("login failed"));
     }
@@ -69,11 +67,11 @@ router.get("/login",async(req,res)=>{
 
 router.post("/logout",async(req,res)=>{
     const token=req.cookies;
-    console.log(token);
+    // console.log(token);
     res.cookie("token",null,{
         expires:new Date(Date.now())
     })
-    res.send("user logged out successfully");
+    res.status(200).send("user logged out successfully");
 
 })
 

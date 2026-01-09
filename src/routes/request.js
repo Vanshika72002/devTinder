@@ -1,4 +1,5 @@
 
+
 const express=require("express");
 const router=express.Router();
 const userAuth = require("../../utils/middlewares/userAuth");
@@ -36,7 +37,7 @@ router.post("/request/send/:status/:toUserId",userAuth,async(req,res)=>{
 
     await newRequest.save();
     
-    res.send("request sent successfully");
+    res.status(200).send("request sent successfully");
 
     }catch(err){
         res.status(400).send("Request coudn't be sent : "+err);
@@ -66,9 +67,9 @@ router.post("/request/review/:status/:reqId",userAuth,async(req,res)=>{
                 ]
             }
         );
-        console.log(request);
+        // console.log(request);
         if(request)
-            request["status"]=status+"ed";
+            request["status"]=status;
         else
             throw new Error("no such request exists.");
         request.save();
